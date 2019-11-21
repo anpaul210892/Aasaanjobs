@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<pre id="json"></pre>
+
+<script>
+var origData = 'interview_attendance:P,interview_date:2019-04-15--to--2019-04-15,screen_status:SR|NS,status:all,location:mumbai|pune|delhi,min_education:1';
+
+var convertToJson = function(origData) {
+
+	if(/^[a-zA-Z0-9_]*:[a-zA-z0-9|]*,*/.test(origData)) {
+	
+    var changedData = origData.split(",");
+
+    var outputData = Object.create({});
+    outputData.and = {};
+
+    for (var i=0; i<changedData.length; i++) {
+      var keyValuePair = changedData[i];
+      var key = keyValuePair.split(":")[0];
+      key = key.replace("_", ".");
+      var value = keyValuePair.split(":")[1];
+
+      if (value.indexOf("--to--") > -1) {
+        var fromValue = new Date(value.split("--to--")[0]).toISOString();
+        var fromValueISO = fromValue.substring(0, fromValue.length-5);
+        var toValue = new Date(new Date(value.split("--to--")[1]).setHours(28,89,59)).toISOString();
+        var toValueISO = toValue.substring(0, toValue.length-5);
+        outputData.and[key] = {
+          "between":new Array(fromValueISO,toValueISO)
+        };
+      } else if(value.indexOf("|") > -1) {
+          var multiValue = value.split("|");
+          outputData.and[key] = {
+            "inq":multiValue
+          };
+      } else if(value.indexOf("all") > -1) {
+      	
+      }else {
+        outputData.and[key] = {
+            "eq":isNaN(value)? value : parseInt(value)
+          };
+      }
+    }
+
+    return outputData;
+  } else{
+  	return null;
+  }
+};
+
+document.getElementById("json").innerHTML = JSON.stringify(convertToJson(origData), undefined, 2);
+</script>
+
+</body>
+</html>
